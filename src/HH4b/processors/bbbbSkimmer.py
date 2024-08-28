@@ -490,8 +490,10 @@ class bbbbSkimmer(SkimmerABC):
         genVars = {}
         for d in gen_selection_dict:
             if d in dataset:
-                vars_dict = gen_selection_dict[d](events, jets, fatjets_xbb, selection_args, P4)
-                genVars = {**genVars, **vars_dict}
+                vars_dict_nobb = gen_selection_dict[d](
+                    events, jets, fatjets, selection_args, P4, "ak8FatJet"
+                )
+                genVars = {**genVars, **vars_dict_nobb}
 
         # remove unnecessary ak4 gen variables for signal region
         if self._region == "signal":

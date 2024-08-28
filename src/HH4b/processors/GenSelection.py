@@ -64,6 +64,7 @@ def gen_selection_HHbbbb(
     fatjets: FatJetArray,
     selection_args: list,
     skim_vars: dict,
+    fatjetname: str,
 ):
     """Gets HH, bb 4-vectors"""
     # finding the two gen higgs
@@ -135,7 +136,7 @@ def gen_selection_HHbbbb(
 
     num_fatjets = 2
     bbFatJetVars = {
-        f"bbFatJet{var}": pad_val(fatjets[var], num_fatjets, axis=1)
+        f"{fatjetname}{var}": pad_val(fatjets[var], num_fatjets, axis=1)
         for var in [
             "HiggsMatch",
             "HiggsMatchIndex",
