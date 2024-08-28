@@ -782,8 +782,8 @@ class bbbbSkimmer(SkimmerABC):
                     )
                     >= 1
                 )
-
-            add_selection("ak8bb_txbb0", cut_txbb, *selection_args)
+            # commented out to remove xbb selection
+            # add_selection("ak8bb_txbb0", cut_txbb, *selection_args)
 
             # 0 veto leptons
             add_selection(
