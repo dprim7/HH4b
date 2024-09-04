@@ -46,7 +46,7 @@ def main(args):
         if username == "rkansal":
             proxy = "/home/users/rkansal/x509up_u31735"
         elif username == "dprimosc":
-            proxy = "/home/users/dprimosc/x509up_u150012"
+            proxy = "/tmp/x509up_u150012"  # "/home/users/dprimosc/x509up_u150012"
     else:
         raise ValueError(f"Invalid site {args.site}")
 
