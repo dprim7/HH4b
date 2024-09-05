@@ -39,7 +39,7 @@ run_utils.add_bool_arg(
 args = parser.parse_args()
 
 
-eosdir = f"/eos/uscms/store/user/{args.user}/bbbb/{args.processor}/{args.tag}/{args.year}/"
+eosdir = f"/ceph/cms/store/user/{args.user}/bbbb/{args.processor}/{args.tag}/{args.year}/"
 
 samples = listdir(eosdir)
 jdls = [jdl for jdl in listdir(f"condor/{args.processor}/{args.tag}/") if jdl.endswith(".jdl")]
