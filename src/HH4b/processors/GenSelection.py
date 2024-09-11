@@ -44,6 +44,7 @@ def gen_selection_HHbbbb_simplified(
     fatjets: FatJetArray,  # noqa: ARG001
     selection_args: list,  # noqa: ARG001
     skim_vars: dict,
+    fatjetname: str,  # noqa: ARG001
 ):
     """Simplified gen selection"""
     higgs = events.GenPart[
@@ -156,6 +157,7 @@ def gen_selection_Hbb(
     fatjets: FatJetArray,
     selection_args: list,  # noqa: ARG001
     skim_vars: dict,
+    fatjetname: str,  # noqa: ARG001
 ):
     """Gets H, bb, 4-vectors + Higgs children information"""
 
@@ -207,6 +209,7 @@ def gen_selection_Top(
     fatjets: FatJetArray,
     selection_args: list,  # noqa: ARG001
     skim_vars: dict,
+    fatjetname: str,  # noqa: ARG001
 ):
     """Get Hadronic Top and children information"""
 
@@ -282,6 +285,7 @@ def gen_selection_V(
     fatjets: FatJetArray,
     selection_args: list,  # noqa: ARG001
     skim_vars: dict,
+    fatjetname: str,  # noqa: ARG001
 ):
     """Get W/Z and children information"""
     vs = events.GenPart[
