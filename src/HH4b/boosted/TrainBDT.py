@@ -146,7 +146,7 @@ def apply_cuts(events_dict, pnet_xbb_str, pnet_mass_str, legacy):
                 & (msd1 > 40)
                 & (mass1 > 50)
                 & (mass2 > 50)
-                & (msd2 > 40)
+                & (msd2 > 30)
             ].copy()
 
     return events_dict
