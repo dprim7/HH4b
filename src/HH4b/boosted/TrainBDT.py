@@ -142,7 +142,7 @@ def apply_cuts(events_dict, pnet_xbb_str, pnet_mass_str, legacy):
             events_dict[key] = events_dict[key][
                 (pt1 > 250)
                 & (pt2 > 250)
-                & (xbb1 > 0.7)
+                & (xbb1 > 0.3)
                 & (msd1 > 40)
                 & (mass1 > 50)
                 & (mass2 > 50)
