@@ -99,16 +99,17 @@ def get_legtitle(legacy, pnet_xbb_str):
     if legacy:
         title += "$T_{Xbb}^{0}$>0.8"
     else:
-        title += "$T_{Xbb}^{0}$>0.7"
+        title += "$T_{Xbb}^{0}$>0.3"
 
     title += "\n" + r"m$_{SD}^{0}$ > 40 GeV"
+    title += "\n" + r"m$_{SD}^{1}$ > 30 GeV"
     if "Legacy" in pnet_xbb_str:
         title += "\n" + "PNet Legacy"
 
     if legacy:
         title += "\n" + r"m$_{reg Legacy}$ > 50 GeV"
     else:
-        title += "\n" + r"m > 50 GeV & m$_{SD}$ > 40 GeV"
+        title += "\n" + r"m > 50 GeV"
 
     return title
 
