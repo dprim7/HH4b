@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import time
+
 import numpy as np
 import pandas as pd
 import vector
-from gtda.homology import VietorisRipsPersistence
 from gtda.diagrams import PersistenceEntropy
-import time
+from gtda.homology import VietorisRipsPersistence
 
 
 def bdt_dataframe(events, key_map=lambda x: x):
@@ -130,10 +131,8 @@ def compute_tda_feature(data: pd.DataFrame) -> np.ndarray:
     start_time = time.time()
 
     # Convert selected features into a point cloud for TDA
-    point_cloud = data[
-            ['VBFjjDeltaEta', 'H1AK4JetAway1dR']
-        ].to_numpy()
-    
+    point_cloud = data[["VBFjjDeltaEta", "H1AK4JetAway1dR"]].to_numpy()
+
     # Initialize the Vietoris-Rips persistence pipeline
     vr = VietorisRipsPersistence(homology_dimensions=[0, 1])
 
@@ -153,9 +152,7 @@ def compute_tda_feature(data: pd.DataFrame) -> np.ndarray:
 
     # Log the computation time into a text file
     with open("tda_computation_time.txt", "a") as log_file:
-        log_file.write(
-                    f"TDA computation time: {int(hours)}h {int(minutes)}m {seconds:.2f}s\n"
-                )
+        log_file.write(f"TDA computation time: {int(hours)}h {int(minutes)}m {seconds:.2f}s\n")
     return tda_feature.flatten()
 
 
@@ -165,5 +162,5 @@ def add_tda_feature(events: pd.DataFrame) -> pd.DataFrame:
     """
     tda_feature = compute_tda_feature(events)
     print("Done.")
-    events['TDA_Feature'] = tda_feature
+    events["TDA_Feature"] = tda_feature
     return events
