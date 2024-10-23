@@ -196,6 +196,8 @@ def load_events(path_to_dir, year, jet_coll_pnet, jet_coll_mass, bdt_models):
             txbb1 = events_dict[key][txbb_str][0]
             mass1 = events_dict[key][mass_str][0]
             mass2 = events_dict[key][mass_str][1]
+            h1mass = events_dict[key][mass_str][0]
+
             # add msd > 40 cut for the first jet FIXME: replace this by the trigobj matched jet
             events_dict[key] = events_dict[key][
                 (pt1 > 250)
@@ -205,6 +207,8 @@ def load_events(path_to_dir, year, jet_coll_pnet, jet_coll_mass, bdt_models):
                 & (msd2 > msd2_preselection[txbb_str])
                 & (mass1 > 50)
                 & (mass2 > 50)
+                & (h1mass > 120)
+                & (h1mass < 130)
             ].copy()
         return events_dict
 
@@ -315,6 +319,7 @@ def get_legtitle(txbb_str):
     title += "\n" + r"m$_{reg}$ > 50 GeV"
     title += "\n" + r"m$_{SD}^{0}$ > " + f"{msd1_preselection[txbb_str]} GeV"
     title += "\n" + r"m$_{SD}^{1}$ > " + f"{msd2_preselection[txbb_str]} GeV"
+    title += "\n" + r"120 Gev < m$_{H1}$ < 130 GeV"
 
     return title
 
@@ -373,18 +378,18 @@ def main(args):
     out_dir.mkdir(exist_ok=True, parents=True)
 
     bdt_models = {
-        "v5_PNetLegacy": {
-            "config": "v5",
-            "model_name": "24May31_lr_0p02_md_8_AK4Away",
-        },
+        # "v5_PNetLegacy": {
+        #    "config": "v5",
+        #    "model_name": "24May31_lr_0p02_md_8_AK4Away",
+        # },
         "v5_ParT": {
             "config": "v5_glopartv2",
             "model_name": "24Sep27_v5_glopartv2",
         },
-        "v5_PNetv12": {
-            "config": "v5_PNetv12",
-            "model_name": "24Jul29_v5_PNetv12",
-        },
+        # "v5_PNetv12": {
+        #    "config": "v5_PNetv12",
+        #    "model_name": "24Jul29_v5_PNetv12",
+        # },
         "v6_ParT": {
             "config": "v6_glopartv2",
             "model_name": "24Oct17_v6_glopartv2",
@@ -434,7 +439,7 @@ def main(args):
         legtitle=get_legtitle("bbFatJetParTTXbb"),
         title="ggF HH4b BDT ROC",
         name="PNet-parT-comparison",
-        plot_thresholds={"v5_PNetLegacy": [0.98, 0.88, 0.03]},
+        plot_thresholds={"v5_ParT": [0.98, 0.88, 0.03]},
         # find_from_sigeff={0.98: [0.98, 0.88, 0.03]},
         # add_cms_label=True,
         show=True,
