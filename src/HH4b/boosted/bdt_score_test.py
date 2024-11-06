@@ -227,14 +227,18 @@ def get_bdt_score(events_dict, model_name, config_name, jlabel=""):
         f".{config_name}", package="HH4b.boosted.bdt_trainings_run3"
     )
     scores = {}
-    for key in events_dict:
+    vbf_scores = {}
+    for key in events_dict:  # why loop over keys? TODO: fix this
+        weight_ttbar = 1
         bdt_events = make_bdt_dataframe.bdt_dataframe(events_dict[key], get_var_mapping(jlabel))
         preds = model.predict_proba(bdt_events)
         if preds.shape[1] == 2:
             scores[key] = preds[:, 1]
-        elif preds.shape[1] >= 3:
-            scores[key] = preds[:, 0]
-    return scores
+        elif preds.shape[1] == 4:
+            bg_tot = np.sum(preds[:, 2:], axis=1)
+            scores[key] = preds[:, 0] / (preds[:, 0] + bg_tot)
+            vbf_scores[key] = preds[:, 1] / (preds[:, 1] + preds[:, 2] + weight_ttbar * preds[:, 3])
+    return scores, vbf_scores
 
 
 def main(args):
@@ -244,9 +248,9 @@ def main(args):
     events_dict = apply_cuts(
         events_dict, f"{jet_collection}ParTTXbb", f"{jet_collection}ParTmassVis"
     )
-    scores = get_bdt_score(events_dict, args.model_name, args.config_name)
+    scores, scores_vbf = get_bdt_score(events_dict, args.model_name, args.config_name)
     ntuple_scores = events_dict["hh4b"]["bdt_score"]
-
+    ntuple_scores_vbf = events_dict["hh4b"]["bdt_score_vbf"]
     ntuple_scores = ntuple_scores.to_numpy().ravel()
 
     score_diff = np.abs(scores["hh4b"] - ntuple_scores)
@@ -270,7 +274,9 @@ def main(args):
     plt.figure(figsize=(12, 6))
 
     plt.hist(scores["hh4b"], bins=50, alpha=0.5, label="BDT Score", color="blue")
+    plt.hist(scores_vbf["hh4b"], bins=50, alpha=0.5, label="BDT Score VBF", color="lightblue")
     plt.hist(ntuple_scores, bins=50, alpha=0.5, label="Ntuple Score", color="green")
+    plt.hist(ntuple_scores_vbf, bins=50, alpha=0.5, label="Ntuple Score VBF", color="yellow")
 
     plt.title("Score Distributions")
     plt.xlabel("Score")
