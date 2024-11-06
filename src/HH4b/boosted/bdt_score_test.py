@@ -252,6 +252,7 @@ def main(args):
     ntuple_scores = events_dict["hh4b"]["bdt_score"]
     ntuple_scores_vbf = events_dict["hh4b"]["bdt_score_vbf"]
     ntuple_scores = ntuple_scores.to_numpy().ravel()
+    ntuple_scores_vbf = ntuple_scores_vbf.to_numpy().ravel()
 
     score_diff = np.abs(scores["hh4b"] - ntuple_scores)
 
@@ -273,9 +274,9 @@ def main(args):
     # Plot histograms for both score sets
     plt.figure(figsize=(12, 6))
 
-    plt.hist(scores["hh4b"], bins=50, alpha=0.5, label="BDT Score", color="blue")
+    # plt.hist(scores["hh4b"], bins=50, alpha=0.5, label="BDT Score", color="blue")
     plt.hist(scores_vbf["hh4b"], bins=50, alpha=0.5, label="BDT Score VBF", color="lightblue")
-    plt.hist(ntuple_scores, bins=50, alpha=0.5, label="Ntuple Score", color="green")
+    # plt.hist(ntuple_scores, bins=50, alpha=0.5, label="Ntuple Score", color="green")
     plt.hist(ntuple_scores_vbf, bins=50, alpha=0.5, label="Ntuple Score VBF", color="yellow")
 
     plt.title("Score Distributions")
