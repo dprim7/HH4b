@@ -301,15 +301,6 @@ def main(args):
     plt.savefig("bdt_score_ntuple_comparison/histogram_score_differences.png")
     plt.close()
 
-    # Boxplot comparison of BDT and Ntuple scores
-    plt.figure(figsize=(8, 6))
-    plt.boxplot([scores["hh4b"], ntuple_scores], labels=["BDT Score", "Ntuple Score"])
-
-    plt.title("Boxplot Comparison of Scores")
-    plt.ylabel("Score")
-    plt.savefig("bdt_score_ntuple_comparison/boxplot_score_comparison.png")
-    plt.close()
-
     # for key, score in scores.items():
     #    print(f"{year} {key} BDT scores: {score}")
 
