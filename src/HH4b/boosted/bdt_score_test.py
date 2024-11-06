@@ -319,6 +319,5 @@ if __name__ == "__main__":
     parser.add_argument("--model-name", required=True, help="Model name for BDT model file")
     parser.add_argument("--config-name", required=True, help="Config name for variable mapping")
     parser.add_argument("--data-path", required=True, help="Path to the data directory")
-    parser.add_argument("--year", nargs="+", type=str, required=True, help="Year(s) of the dataset")
     args = parser.parse_args()
     main(args)
