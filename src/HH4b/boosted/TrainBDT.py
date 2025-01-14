@@ -1328,7 +1328,7 @@ if __name__ == "__main__":
         nargs="+",
         type=str,
         default=["2022EE"],
-        choices=[hh_vars.years, "2022-2023"],
+        choices=hh_vars.years + "2022-2023",
         help="years to train on",
     )
     parser.add_argument(
