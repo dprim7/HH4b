@@ -181,6 +181,17 @@ def apply_cuts(events_dict, txbb_str, mass_str):
     return events_dict
 
 
+# correct mass for glopart-v2; remove once done in skimmer!
+def correct_mass(events_dict, mass_str):
+    for key in events_dict:
+        events_dict[key][(mass_str, 0)] = events_dict[key][(mass_str, 0)] * (
+            1 - events_dict[key][("bbFatJetrawFactor", 0)]
+        )
+        events_dict[key][(mass_str, 1)] = events_dict[key][(mass_str, 1)] * (
+            1 - events_dict[key][("bbFatJetrawFactor", 1)]
+        )
+
+
 def preprocess_data(
     events_dict: dict,
     train_keys: list[str],
@@ -1158,6 +1169,9 @@ def main(args):
                 args.txbb_str,
                 args.mass_str,
             )
+
+        # apply rawmass correction
+        events_dict_years[year] = correct_mass(events_dict_years[year])
 
         # concatenate data
         # if doing multiclass classification, encode each process separately
