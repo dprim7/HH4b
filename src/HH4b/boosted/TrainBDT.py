@@ -483,8 +483,11 @@ def evaluate_model(
                     continue
 
                 events = events_dict_years[year][key]
+                print("events index:", events.index)
                 bdt_events = make_bdt_dataframe.bdt_dataframe(events)
                 test_bdt_dataframe = bdt_events.copy()
+                print("bdt_events index:", bdt_events.index)
+
                 bdt_events["event"] = events["event"].to_numpy()[:, 0]
                 bdt_events["finalWeight"] = events["finalWeight"]
                 bdt_events["mass"] = events[mass_str][1]
@@ -1144,7 +1147,6 @@ def main(args):
             year,
             samples_run3,
             reorder_txbb=True,
-            txbb_str=args.txbb_str,
             load_systematics=False,
             txbb_version=args.txbb,
             scale_and_smear=False,  # TODO: train with scale and smear corrections
@@ -1280,7 +1282,6 @@ def main(args):
             year,
             samples_run3,
             reorder_txbb=True,
-            txbb_str=args.txbb_str,
             load_systematics=False,
             txbb_version=args.txbb,
             scale_and_smear=False,

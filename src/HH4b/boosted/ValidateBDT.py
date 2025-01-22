@@ -355,10 +355,10 @@ def main(args):
     out_dir.mkdir(exist_ok=True, parents=True)
 
     bdt_models = {
-        "v5_PNetLegacy": {
-            "config": "v5",
-            "model_name": "24May31_lr_0p02_md_8_AK4Away",
-        },
+        # "v5_PNetLegacy": {
+        #    "config": "v5",
+        #    "model_name": "24May31_lr_0p02_md_8_AK4Away",
+        # },
         # "v5_ParT": {
         #    "config": "v5_glopartv2",
         #    "model_name": "24Sep27_v5_glopartv2",
@@ -374,6 +374,18 @@ def main(args):
         "v5_ParT_rawmass": {
             "config": "v5_glopartv2",
             "model_name": "24Nov7_v5_glopartv2_rawmass",
+        },
+        # "v7_ParT_rawmass": {
+        #    "config": "v7_glopartv2",
+        #    "model_name": "25Jan14_v7_glopartv2_rawmass",
+        # },
+        # "v8_ParT_rawmass": {
+        #    "config": "v8_glopartv2",
+        #    "model_name": "25Jan16_v8_glopartv2_rawmass",
+        # },
+        "v9_ParT_rawmass": {
+            "config": "v9_glopartv2",
+            "model_name": "25Jan16_v9_glopartv2_rawmass",
         },
     }
 

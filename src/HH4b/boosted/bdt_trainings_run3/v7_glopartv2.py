@@ -1,5 +1,5 @@
 """
-config file created for 25Jan14_v6_glopartv2_rawmass
+config file created for 25Jan14_v7_glopartv2_rawmass
 based off of v5_glopartv2 with the following changes:
 MET feature removed
 Tau32 feature removed
