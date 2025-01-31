@@ -383,9 +383,17 @@ def main(args):
         #    "config": "v8_glopartv2",
         #    "model_name": "25Jan16_v8_glopartv2_rawmass",
         # },
-        "v9_ParT_rawmass": {
-            "config": "v9_glopartv2",
-            "model_name": "25Jan16_v9_glopartv2_rawmass",
+        # "v9_ParT_rawmass": {
+        #    "config": "v9_glopartv2",
+        #    "model_name": "25Jan16_v9_glopartv2_rawmass",
+        # },
+        # "v10_ParT_rawmass": {
+        #    "config": "v10_glopartv2",
+        #    "model_name": "25Jan23_v10_glopartv2_rawmass",
+        # },
+        "v11_ParT_rawmass": {
+            "config": "v11_glopartv2",
+            "model_name": "25Jan30_v11_glopartv2_rawmass",
         },
     }
 
