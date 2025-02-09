@@ -384,17 +384,21 @@ def main(args):
         #    "config": "v9_glopartv2",
         #    "model_name": "25Jan16_v9_glopartv2_rawmass",
         # },
-        # "v10_ParT_rawmass": {
-        #    "config": "v10_glopartv2",
-        #    "model_name": "25Jan23_v10_glopartv2_rawmass",
-        # },
+        "v10_ParT_rawmass": {
+            "config": "v10_glopartv2",
+            "model_name": "25Jan23_v10_glopartv2_rawmass",
+        },
         # "v11_ParT_rawmass": {
         #    "config": "v11_glopartv2",
         #    "model_name": "25Jan30_v11_glopartv2_rawmass",
         # },
-        "v12_ParT_rawmass": {
-            "config": "v12_glopartv2",
-            "model_name": "25Jan31_v12_glopartv2_rawmass",
+        # "v12_ParT_rawmass": {
+        #    "config": "v12_glopartv2",
+        #    "model_name": "25Jan31_v12_glopartv2_rawmass",
+        # },
+        "v13_ParT_rawmass": {
+            "config": "v13_glopartv2",
+            "model_name": "25Feb5_v13_glopartv2_rawmass",
         },
     }
 
@@ -432,9 +436,9 @@ def main(args):
         )
 
     # Plot multi-ROC curve
-    bkgprocess_key = "-".join(args.processes)
+    # bkgprocess_key = "-".join(args.processes)
     years_key = "_".join(args.year)
-    output_name = f"PNet-parT-comparison-{bkgprocess_key}-{years_key}"
+    output_name = f"BDT-comparison-{years_key}"
     print(output_name)
     multiROCCurveGrey(
         restructure_rocs(rocs),
