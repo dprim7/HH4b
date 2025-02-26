@@ -39,6 +39,7 @@ from .hh_vars import (
 )
 
 logger = logging.getLogger("HH4b.utils")
+logger.setLevel(logging.DEBUG)
 
 MAIN_DIR = "./"
 CUT_MAX_VAL = 9999.0
@@ -347,11 +348,26 @@ def load_samples(
 
             logger.debug(f"Loading {sample}")
             try:
-                events = pd.read_parquet(parquet_path, filters=filters, columns=load_columns)
+                non_empty_passed_list = []
+                for parquet_file in parquet_path.glob("*.parquet"):
+                    if not pd.read_parquet(parquet_file).empty:
+                        df_sample = pd.read_parquet(
+                            parquet_file, filters=filters, columns=load_columns
+                        )
+                        non_empty_passed_list.append(df_sample)
+                events = pd.concat(non_empty_passed_list)
             except Exception:
                 warnings.warn(
                     f"Can't read file with requested columns/filters for {sample}!", stacklevel=1
                 )
+                non_empty_passed_list = []
+                for parquet_file in parquet_path.glob("*.parquet"):
+                    if not pd.read_parquet(parquet_file).empty:
+                        df_sample = pd.read_parquet(
+                            parquet_file, filters=filters, columns=load_columns
+                        )
+                        non_empty_passed_list.append(df_sample)
+                events = pd.concat(non_empty_passed_list)
                 continue
 
             # no events?
@@ -969,3 +985,17 @@ def multi_rebin_hist(h: Hist, axes_edges: dict[str, list[float]], flow: bool = T
         h = remove_hist_overflow(h)
 
     return h
+
+
+def discretize_var(var_array, bins=None):
+
+    if bins is None:
+        bins = [0, 0.8, 0.9, 0.94, 0.97, 0.99, 1]
+
+    # discretize the variable into len(bins)-1  integer categories
+    bin_indices = np.digitize(var_array, bins)
+
+    # clip just to be safe
+    bin_indices = np.clip(bin_indices, 1, len(bins) - 1)
+
+    return bin_indices
