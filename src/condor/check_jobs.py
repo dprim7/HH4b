@@ -7,7 +7,7 @@ Author: Raghav Kansal
 from __future__ import annotations
 
 import argparse
-import os
+import subprocess
 from pathlib import Path
 
 import numpy as np
@@ -76,11 +76,15 @@ jdl_dict = {
 
 running_jobs = []
 if args.check_running:
-    os.system("condor_q | awk '{print $9}' > running_jobs.txt")
-    with Path("running_jobs.txt").open() as f:
-        lines = f.readlines()
-
-    running_jobs = [s[:-4] for s in lines if s.endswith(".sh\n")]
+    result = subprocess.run(
+        ["condor_q"], capture_output=True, text=True, shell=False, check=False
+    )
+    # Extract job names (9th column in condor_q output)
+    running_jobs_file = Path("running_jobs.txt")
+    lines = result.stdout.strip().split("\n")
+    job_names = [line.split()[8] for line in lines[1:] if len(line.split()) > 8]
+    running_jobs_file.write_text("\n".join(job_names) + "\n")
+    running_jobs = [s[:-3] for s in job_names if s.endswith(".sh")]
 
 
 missing_files = []
@@ -107,7 +111,7 @@ for sample in samples:
                 missing_files.append(jdl_file)
                 err_files.append(err_file)
                 if args.submit_missing:
-                    os.system(f"condor_submit {jdl_file}")
+                    subprocess.run(["condor_submit", jdl_file], check=False)
 
             continue
 
@@ -140,7 +144,7 @@ for sample in samples:
             missing_files.append(jdl_file)
             err_files.append(err_file)
             if args.submit_missing:
-                os.system(f"condor_submit {jdl_file}")
+                subprocess.run(["condor_submit", jdl_file], check=False)
 
         if args.processor != "trigger" and i not in outs_parquet:
             print_red(f"Missing output parquet #{i} for sample {sample}")

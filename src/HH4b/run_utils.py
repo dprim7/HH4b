@@ -1,8 +1,6 @@
-# from distributed.diagnostics.plugin import WorkerPlugin
 from __future__ import annotations
 
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -40,20 +38,24 @@ def print_red(s):
 
 def check_branch(git_branch: str, git_user: str = "LPC-HH", allow_diff_local_repo: bool = False):
     """Check that specified git branch exists in the repo, and local repo is up-to-date"""
-    assert not bool(
-        os.system(
-            f'git ls-remote --exit-code --heads "https://github.com/{git_user}/HH4b" "{git_branch}"'
-        )
-    ), f"Branch {git_branch} does not exist"
+    # Check if branch exists on remote
+    result = subprocess.run(
+        ["git", "ls-remote", "--exit-code", "--heads",
+         f"https://github.com/{git_user}/HH4b", git_branch],
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, f"Branch {git_branch} does not exist"
 
     print(f"Using branch {git_branch}")
 
     # check if there are uncommitted changes
-    uncommited_files = int(subprocess.getoutput("git status -s | wc -l"))
+    result = subprocess.run(["git", "status", "-s"], capture_output=True, text=True, check=False)
+    uncommited_files = len(result.stdout.strip().split("\n")) if result.stdout.strip() else 0
 
     if uncommited_files:
         print_red("There are local changes that have not been committed!")
-        os.system("git status -s")
+        print(result.stdout)
         if allow_diff_local_repo:
             print_red("Proceeding anyway...")
         else:
@@ -61,8 +63,16 @@ def check_branch(git_branch: str, git_user: str = "LPC-HH", allow_diff_local_rep
             sys.exit(1)
 
     # check that the local repo's latest commit matches that on github
-    remote_hash = subprocess.getoutput(f"git show origin/{git_branch} | head -n 1").split(" ")[1]
-    local_hash = subprocess.getoutput("git rev-parse HEAD")
+    remote_result = subprocess.run(
+        ["git", "show", f"origin/{git_branch}"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    remote_hash = remote_result.stdout.split("\n")[0].split(" ")[1]
+
+    local_result = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=False)
+    local_hash = local_result.stdout.strip()
 
     if remote_hash != local_hash:
         print_red("Latest local and github commits do not match!")

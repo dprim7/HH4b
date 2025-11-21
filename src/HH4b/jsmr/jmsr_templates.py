@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-import os
+from pathlib import Path
 
 import click
 import numpy as np
@@ -570,7 +570,7 @@ def jmsr_templates(dir_name, year_group, tag):
 
     # create plotting directory
     odir = f"{tag}/pt{pt_mask[0]-pt_mask[1]}/{year_group}"
-    os.system(f"mkdir -p {odir}")
+    Path(odir).mkdir(parents=True, exist_ok=True)
 
     hists_all = {}
     hists_pass = {}
@@ -617,7 +617,7 @@ def jmsr_templates(dir_name, year_group, tag):
 
     # create template directory
     template_directory = f"TnPSF/run3_templates/{year_group}/{tag}"
-    os.system(f"mkdir -p {template_directory}")
+    Path(template_directory).mkdir(parents=True, exist_ok=True)
     out_file = f"{template_directory}/topCR_pt{pt_mask[0]-pt_mask[1]}.root"
 
     # save Wmass template

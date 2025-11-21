@@ -7,8 +7,8 @@ Author(s): Cristina Mantilla Suarez, Raghav Kansal
 from __future__ import annotations
 
 import argparse
-import os
 import pickle
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -94,8 +94,8 @@ def run(p: processor, fileset: dict, skipbadfiles: bool, args):
     run_utils.add_mixins(nanoevents)  # update nanoevents schema
 
     # outputs are saved here as pickles
-    outdir = "./outfiles"
-    os.system(f"mkdir -p {outdir}")
+    outdir = Path("./outfiles")
+    outdir.mkdir(parents=True, exist_ok=True)
 
     save_parquet = {
         "skimmer": True,
@@ -112,7 +112,7 @@ def run(p: processor, fileset: dict, skipbadfiles: bool, args):
         local_parquet_dir = local_dir / "outparquet"
 
         if local_parquet_dir.is_dir():
-            os.system(f"rm -rf {local_parquet_dir}")
+            shutil.rmtree(local_parquet_dir)
 
         local_parquet_dir.mkdir()
 

@@ -141,7 +141,7 @@ def get_nevents(pickles_path, year, sample_name):
     """Adds up nevents over all pickles in ``pickles_path`` directory"""
     try:
         out_pickles = listdir(pickles_path)
-    except:
+    except (FileNotFoundError, OSError):
         return None
 
     file_name = out_pickles[0]
@@ -181,8 +181,8 @@ def get_pickles(pickles_path, year, sample_name):
             with Path(f"{pickles_path}/{file_name}").open("rb") as file:
                 out_dict = pickle.load(file)[year][sample_name]
                 out = accumulate([out, out_dict])
-        except:
-            warnings.warn(f"Not able to open file {pickles_path}/{file_name}", stacklevel=1)
+        except (FileNotFoundError, EOFError, KeyError, pickle.UnpicklingError) as e:
+            warnings.warn(f"Not able to open file {pickles_path}/{file_name}: {e}", stacklevel=1)
     return out
 
 

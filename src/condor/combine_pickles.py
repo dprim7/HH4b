@@ -7,7 +7,7 @@ Author(s): Raghav Kansal
 from __future__ import annotations
 
 import argparse
-import os
+import getpass
 import pickle
 from pathlib import Path
 
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    user = os.getlogin()
+    user = getpass.getuser()
     if args.inuser == "":
         args.inuser = user
     if args.outuser == "":
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     indir = f"{tag_dir}/{args.year}/"
 
     outdir = f"/eos/uscms/store/user/{args.outuser}/HH4b/{args.processor}/{args.tag}/"
-    os.system(f"mkdir -p {outdir}")
+    Path(outdir).mkdir(parents=True, exist_ok=True)
 
     print("Inputs directory:", indir)
     print("Outputs directory:", outdir)

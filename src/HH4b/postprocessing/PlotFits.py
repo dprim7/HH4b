@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import argparse
-import os
 from collections import OrderedDict
+from pathlib import Path
 
 import hist
 import numpy as np
@@ -15,7 +15,7 @@ from HH4b.utils import ShapeVar
 def plot_fits(args):
     signal_scale = args.signal_scale
 
-    os.system(f"mkdir -p {args.plots_dir}")
+    Path(args.plots_dir).mkdir(parents=True, exist_ok=True)
     plot_dir = args.plots_dir
 
     # (name in templates -> name in cards)
