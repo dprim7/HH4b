@@ -53,8 +53,8 @@ from HH4b.hh_vars import (
 try:
     rl.util.install_roofit_helpers()
     rl.ParametericSample.PreferRooParametricHist = False
-except:
-    print("rootfit install failed - not an issue for VBF")
+except (AttributeError, ImportError, RuntimeError) as e:
+    print(f"rootfit install failed - not an issue for VBF: {e}")
 
 # logging.basicConfig(level=logging.DEBUG)
 logging.basicConfig(level=logging.INFO)
