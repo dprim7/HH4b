@@ -482,7 +482,7 @@ def make_control_plots(events_dict, plot_dir, year, txbb_version, tag, bgorder, 
     odir = f"control_{tag}/{year}"
     (plot_dir / odir).mkdir(exist_ok=True, parents=True)
 
-    os.system(f"mkdir -p ../corrections/data/{model}")
+    Path(f"../corrections/data/{model}").mkdir(parents=True, exist_ok=True)
 
     hists = {}
     for shape_var in control_plot_vars:

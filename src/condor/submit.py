@@ -37,9 +37,8 @@ def main(args):
     username = os.environ["USER"]
 
     if args.site == "lpc":
-        try:
-            proxy = os.environ["X509_USER_PROXY"]
-        except:
+        proxy = os.environ.get("X509_USER_PROXY")
+        if not proxy:
             print("No valid proxy. Exiting.")
             exit(1)
     elif args.site == "ucsd":
@@ -130,13 +129,16 @@ def main(args):
                     "region": f"--region {args.region}" if "skimmer" in args.processor else "",
                 }
                 write_template(sh_templ, localsh, sh_args)
-                os.system(f"chmod u+x {localsh}")
+                # Make script executable
+                Path(localsh).chmod(0o755)
 
                 if Path(f"{localcondor}.log").exists():
                     Path(f"{localcondor}.log").unlink()
 
                 if args.submit:
-                    os.system(f"condor_submit {localcondor}")
+                    import subprocess
+
+                    subprocess.run(["condor_submit", localcondor], check=False)
                 else:
                     print("To submit ", localcondor)
                 nsubmit = nsubmit + 1
