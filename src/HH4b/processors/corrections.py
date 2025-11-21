@@ -60,7 +60,7 @@ def get_pog_json(obj: str, year: str) -> str:
         pog_json = pog_jsons[obj]
     except KeyError:
         print(f"No json for {obj}")
-        return ""
+        pog_json = ""  # Set to empty string instead of returning early
 
     year = get_UL_year(year) if year == "2018" else year
     if "2022" in year or "2023" in year or "2024" in year:
