@@ -112,7 +112,7 @@ def remove_empty_parquets(samples_dir, year):
         parquet_files = listdir(f"{samples_dir}/{year}/{sample}/parquet")
         for f in parquet_files:
             file_path = f"{samples_dir}/{year}/{sample}/parquet/{f}"
-            if not len(pd.read_parquet(file_path)):
+            if not len(pd.read_parquet(file_path, columns=[])):
                 print("Removing: ", f"{sample}/{f}")
                 Path(file_path).unlink()
 
@@ -367,24 +367,16 @@ def load_samples(
             try:
                 non_empty_passed_list = []
                 for parquet_file in parquet_path.glob("*.parquet"):
-                    if not pd.read_parquet(parquet_file).empty:
-                        df_sample = pd.read_parquet(
-                            parquet_file, filters=filters, columns=load_columns
-                        )
+                    df_sample = pd.read_parquet(
+                        parquet_file, filters=filters, columns=load_columns
+                    )
+                    if not df_sample.empty:
                         non_empty_passed_list.append(df_sample)
                 events = pd.concat(non_empty_passed_list, ignore_index=True)
             except Exception:
                 warnings.warn(
                     f"Can't read file with requested columns/filters for {sample}!", stacklevel=1
                 )
-                non_empty_passed_list = []
-                for parquet_file in parquet_path.glob("*.parquet"):
-                    if not pd.read_parquet(parquet_file).empty:
-                        df_sample = pd.read_parquet(
-                            parquet_file, filters=filters, columns=load_columns
-                        )
-                        non_empty_passed_list.append(df_sample)
-                events = pd.concat(non_empty_passed_list, ignore_index=True)
                 continue
 
             # no events?
