@@ -33,7 +33,7 @@ from HH4b.postprocessing.PostProcess import (
 # ---------------------------------------------------------------------------
 
 
-def _make_events(n: int, mass_vals: np.ndarray, weight_vals: np.ndarray) -> pd.DataFrame:
+def _make_events(mass_vals: np.ndarray, weight_vals: np.ndarray) -> pd.DataFrame:
     """Return a minimal DataFrame with H2PNetMass and weight columns."""
     return pd.DataFrame({"H2PNetMass": mass_vals, "weight": weight_vals})
 
@@ -373,6 +373,7 @@ class TestCategoryAssignment:
             data["bdt_score_vbf"] = np.asarray(bdt_score_vbf, dtype=float)
         else:
             data["bdt_score_vbf"] = np.zeros(n)
+        assert len(data["H2TXbb"]) == n, f"Expected {n} events, got {len(data['H2TXbb'])}"
         return pd.DataFrame(data)
 
     def test_bin1_assignment(self):
