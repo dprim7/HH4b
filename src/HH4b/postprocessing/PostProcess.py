@@ -591,10 +591,16 @@ def load_process_run3_samples(
             bdt_events[jshift].loc[mask_negative_ak4away2, key_map("H2AK4JetAway2dR")] = -1
             bdt_events[jshift].loc[mask_negative_ak4away2, key_map("H2AK4JetAway2mass")] = -1
 
-        bdt_events = pd.concat([bdt_events[jshift] for jshift in jshifts], axis=1)
-
-        # remove duplicates
-        bdt_events = bdt_events.loc[:, ~bdt_events.columns.duplicated()].copy()
+        # Merge jshift DataFrames progressively: pop each one to free memory
+        # immediately rather than holding all copies simultaneously.
+        bdt_events_merged = bdt_events.pop(jshifts[0])
+        for jshift in jshifts[1:]:
+            _df = bdt_events.pop(jshift)
+            for col in _df.columns:
+                if col not in bdt_events_merged.columns:
+                    bdt_events_merged[col] = _df[col]
+        bdt_events = bdt_events_merged
+        del bdt_events_merged
 
         # add more variables for control plots
         # using dictionary batching to avoid repeated memory allocation with pd.DataFrame
@@ -686,13 +692,16 @@ def load_process_run3_samples(
             events_dict, key, year, args.txbb, trigger_region, nevents
         )
 
-        # creating new dataframe with all variables
-        # repeatedly allocating new memory for pd.DataFrame is expensive
-        # best to use a dict instead
-        temp_df = pd.DataFrame(more_vars, index=bdt_events.index)
-        bdt_events = pd.concat([bdt_events, temp_df], axis=1)
-        # TODO: code below removes duplicates, why are H1Pt and H2Pt duplicated?
-        bdt_events = bdt_events.loc[:, ~bdt_events.columns.duplicated(keep="first")]
+        # events_dict is no longer needed; free it to reduce peak memory usage.
+        # Note: more_vars["event"] was set at line 683 above (events_dict["event"].squeeze()),
+        # and will be added to bdt_events in the loop below before the training-year block.
+        del events_dict
+
+        # Add more variables directly to avoid creating an intermediate DataFrame copy.
+        # H1Pt/H2Pt may already exist from bdt_dataframe; keep the first occurrence.
+        for col, values in more_vars.items():
+            if col not in bdt_events.columns:
+                bdt_events[col] = values
 
         # TXbbWeight
         txbb_sf_weight = calculate_txbb_weights(
@@ -705,7 +714,7 @@ def load_process_run3_samples(
             and year in args.training_years
             and key in bdt_training_keys
         ):
-            bdt_events["event"] = events_dict["event"][0]
+            # bdt_events["event"] was already populated from more_vars above
             inferences_dir = Path(
                 f"../boosted/bdt_trainings_run3/{args.bdt_model}/inferences/{year}"
             )
@@ -900,8 +909,9 @@ def load_process_run3_samples(
                     "weight_ttbarSF_tau32Down": bdt_events["weight"] * tau32sf_dn / tau32sf,
                 }
             )
-        temp_df = pd.DataFrame(variation_vars, index=bdt_events.index)
-        bdt_events = pd.concat([bdt_events, temp_df], axis=1)
+        # Add variation columns directly to avoid creating an intermediate DataFrame copy.
+        for col, values in variation_vars.items():
+            bdt_events[col] = values
         bdt_events = bdt_events.reset_index(drop=True)
 
         # HLT selection
