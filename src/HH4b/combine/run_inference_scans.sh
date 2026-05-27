@@ -6,7 +6,8 @@ inj=""
 param="kl"
 unblinded="False"
 xsec="False"
-while getopts ":p:is:ux" opt; do
+extra_frozen=""
+while getopts ":p:is:uxF:" opt; do
   case $opt in
     p)
       param=$OPTARG
@@ -22,6 +23,9 @@ while getopts ":p:is:ux" opt; do
       ;;
     x)
       xsec="True"
+      ;;
+    F)
+      extra_frozen=$OPTARG
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
@@ -43,6 +47,16 @@ elif [[ "$syst" == "stat" ]]; then
 else
     echo "Invalid syst argument"
     exit 1
+fi
+
+# -F <list>: append a comma-separated NP list to the existing freeze configuration.
+# Combine regex syntax (rgx{...}, var{...}) is allowed in the list. Composes with -s.
+if [[ -n "$extra_frozen" ]]; then
+    if [[ -n "$frozen" ]]; then
+        frozen="${frozen},${extra_frozen}"
+    else
+        frozen="--frozen-parameters ${extra_frozen}"
+    fi
 fi
 
 if [[ "$param" == "kl" ]]; then
