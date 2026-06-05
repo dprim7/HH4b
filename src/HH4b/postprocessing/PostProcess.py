@@ -68,19 +68,6 @@ mpl.rcParams["grid.linewidth"] = 0.5
 mpl.rcParams["figure.dpi"] = 400
 mpl.rcParams["figure.edgecolor"] = "none"
 
-# modify samples run3
-for year in samples_run3:
-    samples_run3[year]["qcd"] = [
-        "QCD_HT-1000to1200",
-        "QCD_HT-1200to1500",
-        "QCD_HT-1500to2000",
-        "QCD_HT-2000",
-        # "QCD_HT-200to400",
-        "QCD_HT-400to600",
-        "QCD_HT-600to800",
-        "QCD_HT-800to1000",
-    ]
-
 selection_regions = {
     "pass_vbf": Region(
         cuts={
@@ -510,7 +497,23 @@ def load_process_run3_samples(
 
     # define cutflows
     samples_year = list(samples_run3[year].keys())
-    if not control_plots and not args.bdt_roc:
+
+    # For 2025, reuse 2023 MC selectors and scale MC yields by lumi.
+    # Data still comes from 2025 runs.
+    mc_fallback_year = None
+    mc_lumi_scale = 1.0
+    if year == "2025":
+        mc_fallback_year = "2023"
+        target_lumi = hh_vars.LUMI.get(year)
+        if target_lumi is None:
+            # Build aggregated lumi from available 2025 sub-eras when a combined key is absent.
+            target_lumi = sum(v for k, v in hh_vars.LUMI.items() if k.startswith("2025"))
+        mc_lumi_scale = target_lumi / hh_vars.LUMI[mc_fallback_year]
+        samples_year = [hh_vars.data_key] + [
+            k for k in samples_run3[mc_fallback_year].keys() if k != hh_vars.data_key
+        ]
+
+    if not control_plots and not args.bdt_roc and "qcd" in samples_year:
         samples_year.remove("qcd")
     cutflow = pd.DataFrame(index=samples_year)
     cutflow_dict = {}
@@ -525,11 +528,15 @@ def load_process_run3_samples(
     for key in samples_year:
         logger.info(f"Load samples {key}")
 
-        samples_to_process = {year: {key: samples_run3[year][key]}}
+        source_year = year
+        if mc_fallback_year is not None and key != hh_vars.data_key:
+            source_year = mc_fallback_year
+
+        samples_to_process = {source_year: {key: samples_run3[source_year][key]}}
 
         events_dict = load_run3_samples(
             f"{args.data_dir}/{args.tag}",
-            year,
+            source_year,
             samples_to_process,
             reorder_txbb=True,
             load_systematics=True,
@@ -537,7 +544,20 @@ def load_process_run3_samples(
             scale_and_smear=args.scale_smear,
             mass_str=mreg_strings[args.txbb],
             bdt_version=args.bdt_model,
-        )[key]
+        )
+        if key not in events_dict:
+            logger.warning(f"Skipping {key}: no events loaded for current selectors")
+            continue
+        events_dict = events_dict[key]
+
+        # 2025 MC is sourced from 2023 selectors; scale to 2025 lumi.
+        if mc_fallback_year is not None and key != hh_vars.data_key:
+            weight_cols = []
+            for col in events_dict.columns.get_level_values(0).unique():
+                if col in {"weight", "finalWeight", "scale_weights", "pdf_weights"} or (col.startswith("weight_") and ("noxsec" not in col and "nonorm" not in col)):
+                    weight_cols.append(col)
+            for col in weight_cols:
+                events_dict[col] = events_dict[col] * mc_lumi_scale
 
         # inference and assign score
         jshifts = [""]
@@ -591,10 +611,12 @@ def load_process_run3_samples(
             bdt_events[jshift].loc[mask_negative_ak4away2, key_map("H2AK4JetAway2dR")] = -1
             bdt_events[jshift].loc[mask_negative_ak4away2, key_map("H2AK4JetAway2mass")] = -1
 
-        bdt_events = pd.concat([bdt_events[jshift] for jshift in jshifts], axis=1)
-
-        # remove duplicates
-        bdt_events = bdt_events.loc[:, ~bdt_events.columns.duplicated()].copy()
+        if len(jshifts) == 1:
+            bdt_events = bdt_events[jshifts[0]]
+        else:
+            bdt_events = pd.concat([bdt_events[jshift] for jshift in jshifts], axis=1)
+            # remove duplicates (shared nominal columns appear in every per-shift DataFrame)
+            bdt_events = bdt_events.loc[:, ~bdt_events.columns.duplicated()].copy()
 
         # add more variables for control plots
         # using dictionary batching to avoid repeated memory allocation with pd.DataFrame
@@ -686,13 +708,11 @@ def load_process_run3_samples(
             events_dict, key, year, args.txbb, trigger_region, nevents
         )
 
-        # creating new dataframe with all variables
-        # repeatedly allocating new memory for pd.DataFrame is expensive
-        # best to use a dict instead
-        temp_df = pd.DataFrame(more_vars, index=bdt_events.index)
-        bdt_events = pd.concat([bdt_events, temp_df], axis=1)
-        # TODO: code below removes duplicates, why are H1Pt and H2Pt duplicated?
-        bdt_events = bdt_events.loc[:, ~bdt_events.columns.duplicated(keep="first")]
+        # Assign more_vars columns directly to avoid creating intermediate DataFrames.
+        # Some columns (e.g. H1Pt, H2Pt) already exist from bdt_dataframe; skip them.
+        for col, vals in more_vars.items():
+            if col not in bdt_events.columns:
+                bdt_events[col] = vals
 
         # TXbbWeight
         txbb_sf_weight = calculate_txbb_weights(
@@ -716,6 +736,9 @@ def load_process_run3_samples(
             logger.info(f"Keep {fraction}% of {key} for year {year}")
             bdt_events = bdt_events[events_to_keep]
             bdt_events["weight"] *= 1 / fraction  # divide by BDT test / train ratio
+
+        # Release the raw parquet DataFrame; all needed data is now in bdt_events.
+        del events_dict
 
         cutflow_dict[key] = OrderedDict([("Skimmer Preselection", np.sum(bdt_events["weight"]))])
 
@@ -785,26 +808,18 @@ def load_process_run3_samples(
                 stat_up = np.ones(nevents)
                 stat_dn = np.ones(nevents)
                 for ijet in get_jets_for_txbb_sf(key):
+                    # Cache array conversions: same columns are used for nominal/up/dn.
+                    txbb_arr = bdt_events[f"H{ijet}TXbb"].to_numpy()
+                    pt_arr = bdt_events[f"H{ijet}Pt"].to_numpy()
+                    pt_range = TXbb_pt_corr_bins[wp][j : j + 2]
                     nominal *= corrections.restrict_SF(
-                        txbb_sf["nominal"],
-                        bdt_events[f"H{ijet}TXbb"].to_numpy(),
-                        bdt_events[f"H{ijet}Pt"].to_numpy(),
-                        TXbb_wps[wp],
-                        TXbb_pt_corr_bins[wp][j : j + 2],
+                        txbb_sf["nominal"], txbb_arr, pt_arr, TXbb_wps[wp], pt_range
                     )
                     stat_up *= corrections.restrict_SF(
-                        txbb_sf["stat_up"],
-                        bdt_events[f"H{ijet}TXbb"].to_numpy(),
-                        bdt_events[f"H{ijet}Pt"].to_numpy(),
-                        TXbb_wps[wp],
-                        TXbb_pt_corr_bins[wp][j : j + 2],
+                        txbb_sf["stat_up"], txbb_arr, pt_arr, TXbb_wps[wp], pt_range
                     )
                     stat_dn *= corrections.restrict_SF(
-                        txbb_sf["stat_dn"],
-                        bdt_events[f"H{ijet}TXbb"].to_numpy(),
-                        bdt_events[f"H{ijet}Pt"].to_numpy(),
-                        TXbb_wps[wp],
-                        TXbb_pt_corr_bins[wp][j : j + 2],
+                        txbb_sf["stat_dn"], txbb_arr, pt_arr, TXbb_wps[wp], pt_range
                     )
                 variation_vars.update(
                     {
@@ -900,8 +915,9 @@ def load_process_run3_samples(
                     "weight_ttbarSF_tau32Down": bdt_events["weight"] * tau32sf_dn / tau32sf,
                 }
             )
-        temp_df = pd.DataFrame(variation_vars, index=bdt_events.index)
-        bdt_events = pd.concat([bdt_events, temp_df], axis=1)
+        # Assign variation columns directly; all are new so no duplicate guard needed.
+        for col, vals in variation_vars.items():
+            bdt_events[col] = vals
         bdt_events = bdt_events.reset_index(drop=True)
 
         # HLT selection
@@ -911,7 +927,7 @@ def load_process_run3_samples(
 
         if args.txbb == "pnet-legacy":
             txbb_presel = 0.8
-        elif args.txbb in ["glopart-v2", "pnet-v12"]:
+        elif args.txbb in ["glopart-v2", "glopart-v3", "pnet-v12"]:
             txbb_presel = 0.3
 
         for jshift in jshifts:
@@ -924,8 +940,6 @@ def load_process_run3_samples(
             category = check_get_jec_var("Category", jshift)
             bdt_score = check_get_jec_var("bdt_score", jshift)
 
-            # TODO: code below removes duplicates, why are H1Pt and H2Pt duplicated?
-            bdt_events = bdt_events.loc[:, ~bdt_events.columns.duplicated(keep="first")]
             mask_presel = (
                 (bdt_events[h1msd] >= 40)  # FIXME: replace by jet matched to trigger object
                 & (bdt_events[h1pt] >= args.pt_first)
@@ -1083,7 +1097,7 @@ def load_process_run3_samples(
                 columns += [f"pdf_weights_{i}"]
         if key != "data":
             columns += ["weight_triggerUp", "weight_triggerDown"] + pileup_ps_weights
-        columns = list(set(columns))
+        columns = list(dict.fromkeys(columns))  # deduplicate while preserving order
 
         if control_plots:
             bdt_events = bdt_events.rename(
@@ -1402,6 +1416,10 @@ def make_control_plots(events_dict, plot_dir, year, txbb_version):
         txbb_label = "PNet 103X"
     elif txbb_version == "glopart-v2":
         txbb_label = "GloParTv2"
+    elif txbb_version == "glopart-v3":
+        txbb_label = "GloParTv3"
+    else:
+        txbb_label = txbb_version
 
     control_plot_vars = [
         ShapeVar(var="bdt_score", label=r"BDT score ggF", bins=[30, 0, 1], blind_window=[0.8, 1.0]),
@@ -1446,6 +1464,9 @@ def make_control_plots(events_dict, plot_dir, year, txbb_version):
 
     # Find the normalization needed to reweight QCD
     qcd_norm = 1.0
+    available_keys = set(events_dict.keys())
+    control_sig_keys = [k for k in ["hh4b", "vbfhh4b", "vbfhh4b-k2v0"] if k in available_keys]
+    control_bg_keys = [k for k in bg_keys if k in available_keys]
 
     hists = {}
     for i, shape_var in enumerate(control_plot_vars):
@@ -1459,8 +1480,8 @@ def make_control_plots(events_dict, plot_dir, year, txbb_version):
             qcd_norm_tmp = plotting.ratioHistPlot(
                 hists[shape_var.var],
                 year,
-                ["hh4b", "vbfhh4b", "vbfhh4b-k2v0"],
-                bg_keys,
+                control_sig_keys,
+                control_bg_keys,
                 name=f"{plot_dir}/control/{year}/{shape_var.var}",
                 show=False,
                 log=True,
@@ -1505,14 +1526,18 @@ def abcd(
     bg_keys_all,
     sig_keys,
 ):
-    bg_keys = bg_keys_all.copy()
+    available_keys = set(events_dict.keys())
+    bg_keys = [k for k in bg_keys_all if k in available_keys]
     if "qcd" in bg_keys:
         bg_keys.remove("qcd")
+    sig_keys = [k for k in sig_keys if k in available_keys]
 
     dicts = {"data": [], **{key: [] for key in bg_keys}}
 
     s = 0
     for key in sig_keys + ["data"] + bg_keys:
+        if key not in events_dict:
+            continue
         events = events_dict[key]
         cut = get_cut(events, txbb_cut, bdt_cut)
 
@@ -1543,7 +1568,7 @@ def abcd(
     # A = B * C / D
     bqcd = dmt[1] * dmt[2] / dmt[3]
 
-    background = bqcd + bg_tots[0] if len(bg_keys) else bqcd
+    background = bqcd + bg_tots[0] if bg_keys else bqcd
     return s, background, dmt
 
 
@@ -1569,6 +1594,10 @@ def postprocess_run3(args):
     elif args.txbb == "pnet-v12":
         fom_window_by_mass["H2PNetMass"] = [120, 150]
         blind_window_by_mass["H2PNetMass"] = [120, 150]
+    # for glopart-v3, reuse the glopart-v2 windows
+    elif args.txbb == "glopart-v3":
+        fom_window_by_mass["H2PNetMass"] = [110, 155]
+        blind_window_by_mass["H2PNetMass"] = [110, 140]
 
     mass_window = np.array(fom_window_by_mass[args.mass])
 
@@ -1997,7 +2026,7 @@ if __name__ == "__main__":
         "--txbb",
         type=str,
         default="glopart-v2",
-        choices=["pnet-legacy", "pnet-v12", "glopart-v2"],
+        choices=["pnet-legacy", "pnet-v12", "glopart-v2", "glopart-v3"],
         help="version of TXbb tagger/mass regression to use",
     )
     parser.add_argument(

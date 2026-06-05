@@ -98,7 +98,7 @@ def bdt_dataframe(events, key_map=lambda x: x):
             key_map("H1eta"): h1.eta,
             # xbb
             key_map("H1Xbb"): discretize_var(
-                events[key_map("bbFatJetParTTXbb")].to_numpy()[:, 0],
+                events[key_map("bbFatJetParTPXbb")].to_numpy()[:, 0],
                 bins=[0, 0.8, 0.9, 0.94, 0.97, 0.99, 1],
             ),
             # ratios
