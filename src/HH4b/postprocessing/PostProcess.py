@@ -1789,8 +1789,15 @@ def postprocess_run3(args):
     print("BKG keys ", bg_keys)
 
     if len(args.years) > 1:
-        # list of years available for a given process to scale to full lumi
-        available = [y for y in ["2022", "2022EE", "2023", "2023BPix"] if y in args.years]
+        # Years for which each process has dedicated MC. All Run-3 eras now qualify
+        # (2024/2025 MC was added via "split2024MC"); leaving 2024/2025 out here would
+        # over-scale the 2022-2023 MC to full lumi AND drop 2024/2025 MC from the per-year
+        # templates, since both the lumi_scale and the per-year sample inclusion below key
+        # off this list. A strict subset should only be used if a process is genuinely
+        # missing MC for some era (then it is extrapolated to the full lumi).
+        available = [
+            y for y in ["2022", "2022EE", "2023", "2023BPix", "2024", "2025"] if y in args.years
+        ]
         print(f"WARNING: Using available MC from {available}")
         scaled_by_years = {
             "ttbar": available,
