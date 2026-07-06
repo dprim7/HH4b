@@ -21,8 +21,9 @@ numtoys=100
 order=0
 year="2022EE"
 passbin=1
+txbb="glopart-v2"
 
-options=$(getopt -o "tfdlo:s:y" --long "cardstag:,templatestag:,goftoys,ffits,dfit,limits,order:,numtoys:,seed:,year:,passbin:" -- "$@")
+options=$(getopt -o "tfdlo:s:y" --long "cardstag:,templatestag:,goftoys,ffits,dfit,limits,order:,numtoys:,seed:,year:,passbin:,txbb:" -- "$@")
 eval set -- "$options"
 
 while true; do
@@ -59,6 +60,10 @@ while true; do
             shift
             numtoys=$1
             ;;
+        --txbb)
+            shift
+            txbb=$1
+            ;;
         --year)
             shift
             year=$1
@@ -83,14 +88,15 @@ while true; do
 done
 
 echo "Arguments: cardstag=$cards_tag templatestag=$templates_tag dfit=$dfit \
-goftoys=$goftoys ffits=$ffits order=$order seed=$seed numtoys=$numtoys year=$year passbin=$passbin"
+goftoys=$goftoys ffits=$ffits order=$order seed=$seed numtoys=$numtoys year=$year passbin=$passbin txbb=$txbb"
 
 
 ####################################################################################################
 # Set up fit args
 ####################################################################################################
 
-templates_dir="/home/users/woodson/HH4b/src/HH4b/postprocessing/templates/${templates_tag}"
+# resolve templates dir relative to this script (src/HH4b/combine -> src/HH4b/postprocessing)
+templates_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../postprocessing" && pwd)/templates/${templates_tag}"
 cards_dir="cards/f_tests/${cards_tag}/"
 mkdir -p "${cards_dir}"
 echo "Saving datacards to ${cards_dir}"
@@ -140,7 +146,7 @@ do
         python3 -u postprocessing/CreateDatacard.py --templates-dir "${templates_dir}" \
         --model-name "${model_name}" --nTF "${ord}" --cards-dir "${cards_dir}" --year "${year}" \
         --regions ${region_} --no-jesr --bdt-model 25Feb5_v13_glopartv2_rawmass \
-        --sig-samples hh4b vbfhh4b --txbb glopart-v2
+        --sig-samples hh4b vbfhh4b --txbb "${txbb}"
     fi
 
     cd "${cards_dir}/${model_name}/" || exit
