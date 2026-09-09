@@ -93,6 +93,18 @@ def _integration_args(**overrides):
         weight_ttbar_bdt=1.0,
         bdt_disc=True,
         bdt_inference_chunk_size=0,
+        # nested FOM scan / fast path (parser defaults)
+        fom_fast=False,
+        fom_bin1_asimov=False,
+        fom_reliability_filter=True,
+        # model-independent slim FOM cache (parser defaults; inert when fom_cache=False)
+        fom_cache=False,
+        fom_cache_dir="fom_cache",
+        fom_cache_rebuild=False,
+        fom_cache_build_only=False,
+        fom_cache_keys=None,
+        # 2024/2025 shared-MC split (parser default)
+        split_shared_mc=False,
     )
     for k, v in overrides.items():
         setattr(base, k, v)

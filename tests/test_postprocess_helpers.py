@@ -58,6 +58,18 @@ def _minimal_args(**overrides):
         fom_scan_bin1=False,
         fom_scan_bin2=False,
         bdt_model="25Feb5_v13_glopartv2_rawmass",
+        # nested FOM scan / fast path (parser defaults)
+        fom_fast=False,
+        fom_bin1_asimov=False,
+        fom_reliability_filter=True,
+        # model-independent slim FOM cache (parser defaults; inert when fom_cache=False)
+        fom_cache=False,
+        fom_cache_dir="fom_cache",
+        fom_cache_rebuild=False,
+        fom_cache_build_only=False,
+        fom_cache_keys=None,
+        # 2024/2025 shared-MC split (parser default)
+        split_shared_mc=False,
     )
     for k, v in overrides.items():
         setattr(base, k, v)
